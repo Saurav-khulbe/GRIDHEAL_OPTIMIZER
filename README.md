@@ -1,74 +1,77 @@
-# GridHeal Dashboard
+# ⚡ GridHeal: Dual-Prototype Architecture & Deployment Flow
 
-> **"A microgrid is an operating system for electricity. GridHeal is the scheduler."**
->
-> Built by **Team lulzsec** (Karan Singh, Saurav Khulbe, Raj Gaurav Singh, Parth Biroria)  
-> *Bharati Vidyapeeth's College of Engineering*  
+> **"A microgrid is an operating system for electricity. GridHeal is the scheduler."**  
+> *Team lulzsec • Bharati Vidyapeeth's College of Engineering*  
 > *Prompt-ae-thon | Sustainability & Smart Cities (PS4: Self-Healing Renewable Energy Grid)*
 
 ---
 
-## ⚡ Overview
+## 🎯 Core Strategy: Why Two Separate Deployments?
 
-GridHeal is an autonomous, self-healing microgrid controller designed for university campuses. It runs a 15-minute continuous control loop:
-1. **Detect:** Monitor telemetry and flag sudden drop/trip anomalies.
-2. **Predict:** Forecast solar and demand 4 steps ahead with uncertainty bands.
-3. **Reallocate:** Priority dispatch (P0 Critical, P1 Flexible, P2 Deferrable), EV deadline shifting, and peak shaving.
-4. **Recover:** Solid-state fault isolation and microgrid islanding to ensure **0 minutes of critical load downtime**.
+To ensure **zero downtime during live evaluations while continuing rapid iteration**, we separated the project into two distinct environments backed by independent GitHub repositories and cloud providers:
 
-The app is completely static, deterministic (Mulberry32 PRNG), and client-side, with zero external backend dependencies or API keys required.
+```mermaid
+flowchart TD
+    subgraph Repo1["Repo 1: Senku-K/gridheal"]
+        P1["Stable Branch (main)"] --> Vercel["⚡ Vercel Deployment"]
+        Vercel --> URL1["🔗 https://gridheal.vercel.app/"]
+    end
 
----
+    subgraph Repo2["Repo 2: Senku-K/GRIDHEAL_OPTIMIZER"]
+        P2["Active Dev Branch (main)"] --> Netlify["🌐 Netlify Deployment"]
+        Netlify --> URL2["🔗 https://gridhealoptimizer.netlify.app/"]
+    end
 
-## 🚀 Easy 1-Click Deployment (Vercel & Netlify)
-
-### Deploying on **Vercel**
-1. Push this repository to GitHub/GitLab.
-2. Go to [vercel.com/new](https://vercel.com/new) and select the repository.
-3. Preset will auto-detect **Vite**:
-   - **Build Command:** `npm run build`
-   - **Output Directory:** `dist`
-4. Click **Deploy**. The `vercel.json` rewrite file is already configured.
-
-### Deploying on **Netlify**
-1. Push this repository to GitHub/GitLab.
-2. Go to [app.netlify.com](https://app.netlify.com) and click **Add new site** > **Import an existing project**.
-3. Choose your repository.
-4. The included `netlify.toml` automatically configures:
-   - **Base directory:** (leave default)
-   - **Build command:** `npm run build`
-   - **Publish directory:** `dist`
-5. Click **Deploy site**.
-
-Alternatively, drag and drop the built `dist/` directory directly into Netlify Drop for instant hosting without git.
-
----
-
-## 🛠️ Local Development & Testing
-
-```bash
-# Install dependencies
-npm install
-
-# Start local development server
-npm run dev
-
-# Run Vitest test suite (verifying determinism, energy balance, and zero downtime)
-npm test
-
-# Build production bundle
-npm run build
+    Pitch["👨‍⚖️ Hackathon Judges / Live Pitch"] --> URL1
+    Testing["🧪 Experimental Tuning / Fault Injections"] --> URL2
 ```
 
 ---
 
-## 📊 Visual Components Built
-- **Power River:** Animated campus microgrid schematic with real-time kW ribbons, battery tank fill, and fault isolation points.
-- **Dumbbell Scorecard:** Compares Baseline vs GridHeal on critical downtime (0 min target), replan duration (< 1s target), peak demand, and CO2 emissions.
-- **Supply–Demand Tape:** Stacked supply above the zero line and demands below, highlighting fault windows.
-- **Split-Reveal Compare:** Interactive slider revealing Baseline on the left vs GridHeal on the right with green shaded kWh saved ribbon.
-- **Scheduler Gantt:** CPU scheduler visualization treating loads as prioritized processes (P0, P1, P2).
-- **Forecast Fan:** Predictive solar uncertainty fan evaluated in real-time against actual telemetry.
-- **Spiral Clock:** 7-day radial heatmap with 24-hour dial and interactive step jump navigation.
-- **Why Panel:** Explainable right-side drawer stepping through the 4-stage decision loop for each action taken.
-- **Guided Tour:** 6-step interactive walkthrough for non-expert judges and evaluators.
+## 🌐 1. Production Pitch Prototype (Vercel)
+
+- **Live URL:** [https://gridheal.vercel.app/](https://gridheal.vercel.app/)
+- **GitHub Repository:** [https://github.com/Senku-K/gridheal](https://github.com/Senku-K/gridheal)
+- **Role:** **Stable Judge-Facing Demo**
+- **Purpose:** 
+  - Kept strictly reliable with locked parameters for presentations and pitch judging.
+  - Used for the **6-Step Guided Walkthrough Tour** to explain how GridHeal eliminates critical power downtime.
+  - Guarantees 100% uptime on Vercel's global edge network.
+
+---
+
+## 🧪 2. Optimization & Staging Lab Prototype (Netlify)
+
+- **Live URL:** [https://gridhealoptimizer.netlify.app/](https://gridhealoptimizer.netlify.app/)
+- **GitHub Repository:** [https://github.com/Senku-K/GRIDHEAL_OPTIMIZER](https://github.com/Senku-K/GRIDHEAL_OPTIMIZER)
+- **Role:** **Active Experimentation & Tuning Sandbox**
+- **Purpose:**
+  - Where we test extreme fault stress tests (multi-inverter trips, battery thermal cuts, EV demand spikes).
+  - Used for modifying dispatch constants (`src/sim/config.ts`), adjusting look-ahead forecast horizons, and refining UI features.
+  - Auto-builds directly via `netlify.toml` whenever updates are pushed from the CLI.
+
+---
+
+## 🔄 The 4-Stage Control Flow Under the Hood
+
+Both prototypes run the deterministic **GridHeal Control Loop** every 15-minute simulation step:
+
+1. **Detect (Telemetry Audit):**
+   - Continuously monitors solar generation, battery State-of-Charge (SoC), and bus voltage to spot anomalies.
+2. **Predict (Forecast Look-Ahead):**
+   - Applies a 4-step lookahead uncertainty cone forecasting solar drops and evening peak loads before they impact the grid.
+3. **Reallocate (Priority Scheduling):**
+   - Allocates power based on priority queues: **P0 (Critical Labs/Servers)** $\rightarrow$ **P1 (EVs & Pumps shifted to solar hours)** $\rightarrow$ **P2 (Deferrable thermal loads on surplus only)**.
+4. **Recover (Fault Isolation & Islanding):**
+   - Isolates faulty hardware branches in $<1$ second and islands critical loads, guaranteeing **0 minutes of critical downtime**.
+
+---
+
+## 📊 Benchmark Targets Delivered
+
+| Metric | Baseline Controller | GridHeal Controller | Design Target |
+| :--- | :--- | :--- | :--- |
+| **Critical-Load Downtime** | 105 min (Blackout) | **0 min (100% Protected)** | **0 min** |
+| **Fault to Re-plan Time** | ~3 min (Manual) | **0.14 ms (Real-time)** | **< 1 s** |
+| **Peak Demand Shaved** | 362 kW | **317.6 kW (-44.4 kW)** | Shaved |
+| **CO₂ Avoided (7 Days)** | 0 kg | **2,175 kg Avoided** | Maximized |
